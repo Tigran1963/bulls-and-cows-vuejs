@@ -114,11 +114,6 @@ body {
 	@supports (overflow: clip) {
 		overflow: clip;
 	}
-	// Push footer to bottom
-	> main {
-		flex: 1 1 auto;
-	}
-	// For sliders
 	> * {
 		min-width: 0;
 	}
@@ -127,4 +122,35 @@ body {
 	max-width: $maxWidthContainer + px;
 	margin: 0 auto;
 	padding: 0 $containerPadding + px;
+}
+
+.full-page-container {
+	padding-top: toRem(60);
+	padding-bottom: toRem(60);
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+.page-title {
+	font-size: toRem(40);
+	font-weight: 600;
+	margin-bottom: toRem(16);
+}
+
+.button {
+	display: inline-flex;
+	justify-content: center;
+	text-align: center;
+	align-items: center;
+	color: #fff;
+	background-color: $orangeColor;
+	transition: all 0.3s;
+	font-weight: 600;
+	@media (any-hover: hover) {
+		&:hover {
+			background-color: $orangeHoverColor;
+		}
+	}
 }

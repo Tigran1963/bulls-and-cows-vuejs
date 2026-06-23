@@ -1,10 +1,9 @@
-<script setup></script>
+<script setup>
+import { RouterView } from 'vue-router'
+</script>
 
 <template>
-  <h1>Bulls & Cows</h1>
-  <h2>Break the code!</h2>
-  <button>Play</button>
-  <button>Settings</button>
+	<RouterView />
 </template>
 
-<style scoped></style>
+<style lang="scss" scoped></style>
