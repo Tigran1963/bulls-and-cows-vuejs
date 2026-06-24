@@ -1,7 +1,7 @@
 # bulls-and-cows-vuejs
 
 ## Description
-Technologies: Vue.js + Vite, SCSS
+Technologies: Vue.js + Vite, Vue-router, Pinia, SCSS
 
 ### Project Setup
 ```sh
