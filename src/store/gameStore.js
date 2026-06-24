@@ -29,18 +29,67 @@ export const useGameStore = defineStore('game', () => {
 			localStorage.setItem('game_max_attempts', parsed);
 		}
 	}
+	const addAttempt = (guess) => {
+		if (isGameOver.value) return;
 
-	function generateSecretCode(length) { }
-	function checkAttempt(guess, secret) { }
+		const { bulls, cows } = checkAttempt(guess, secretCode.value)
+
+		attempts.value.push({
+			guess: guess,
+			bulls: bulls,
+			cows: cows
+		})
+
+		if (bulls === codeLength.value) {
+			isWon.value = true
+			isGameOver.value = true
+			return;
+		}
+
+		if (attempts.value.length >= maxAttempts.value) {
+			isGameOver.value = true
+		}
+	}
+	function generateSecretCode(length) {
+		const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+		let code = '';
+
+		for (let i = 0; i < length; i++) {
+			const randomIndex = Math.floor(Math.random() * digits.length);
+			code += digits[randomIndex];
+			digits.splice(randomIndex, 1);
+		}
+
+		return code;
+	}
+	function checkAttempt(guess, secret) {
+		let bulls = 0;
+		let cows = 0;
+
+		const guessArr = String(guess).split('');
+		const secretArr = String(secret).split('');
+
+		guessArr.forEach((digit, index) => {
+			if (digit === secretArr[index]) {
+				bulls++;
+			} else if (secretArr.includes(digit)) {
+				cows++;
+			}
+		});
+
+		return { bulls, cows };
+	}
 
 	return {
 		codeLength,
 		maxAttempts,
-		setCodeLength,
-		setMaxAttempts,
-		startNewGame, 
+		secretCode,
 		attempts,
 		isGameOver,
-		isWon
+		isWon,
+		setCodeLength,
+		setMaxAttempts,
+		startNewGame,
+		addAttempt
 	}
 });

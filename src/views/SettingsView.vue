@@ -39,7 +39,7 @@ const handleMaxAttemptsInput = (event) => {
 				</div>
 				<div class="settings__attempts">
 					<label for="settings-attempts-number" class="settings__subtitle">Enter number of attempts</label>
-					<input type="number" min="5" max="10" placeholder="from 5 to 10" id="settings-attempts-number"
+					<input type="number" min="5" max="10" placeholder="5-10" id="settings-attempts-number"
 						:value="store.maxAttempts" @input="handleMaxAttemptsInput" />
 				</div>
 				<RouterLink :to="{ name: 'start' }" class="settings__button button">Back to start page</RouterLink>
@@ -62,9 +62,11 @@ const handleMaxAttemptsInput = (event) => {
 	&__length-field {
 		display: flex;
 		align-items: center;
+		font-size: toRem(20);
 
 		input {
 			width: auto;
+
 			margin-right: toRem(4);
 		}
 
@@ -74,11 +76,19 @@ const handleMaxAttemptsInput = (event) => {
 	}
 
 	&__attempts {
+		display: flex;
+		flex-direction: column;
 		input {
 			border: 1px solid #000;
 			border-radius: 16px;
 			height: toRem(40);
+			width: toRem(60);
 			padding: toRem(8) toRem(16);
+			background-color: #fff;
+			font-size: toRem(24);
+			&::placeholder{
+				font-size: toRem(12);
+			}
 		}
 
 		margin-bottom: toRem(24);
