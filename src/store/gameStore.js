@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { checkAttempt, generateSecretCode } from "@/core/functions";
 
 export const useGameStore = defineStore('game', () => {
 	const codeLength = ref(parseInt(localStorage.getItem('game_code_length')) || 4)
@@ -49,35 +50,6 @@ export const useGameStore = defineStore('game', () => {
 		if (attempts.value.length >= maxAttempts.value) {
 			isGameOver.value = true
 		}
-	}
-	function generateSecretCode(length) {
-		const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-		let code = '';
-
-		for (let i = 0; i < length; i++) {
-			const randomIndex = Math.floor(Math.random() * digits.length);
-			code += digits[randomIndex];
-			digits.splice(randomIndex, 1);
-		}
-
-		return code;
-	}
-	function checkAttempt(guess, secret) {
-		let bulls = 0;
-		let cows = 0;
-
-		const guessArr = String(guess).split('');
-		const secretArr = String(secret).split('');
-
-		guessArr.forEach((digit, index) => {
-			if (digit === secretArr[index]) {
-				bulls++;
-			} else if (secretArr.includes(digit)) {
-				cows++;
-			}
-		});
-
-		return { bulls, cows };
 	}
 
 	return {
