@@ -2,321 +2,350 @@
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useGameStore } from '@/store/gameStore';
 
-const store = useGameStore()
-const currentGuess = ref(Array(store.codeLength).fill(''))
-const cellRefs = ref([])
-const activeIndex = ref(null)
+const store = useGameStore();
+const currentGuess = ref(Array(store.codeLength).fill(''));
+const cellRefs = ref([]);
+const activeIndex = ref(null);
 
 const focusInput = () => {
-	nextTick(() => {
-		if (store.isGameOver) return;
+   nextTick(() => {
+      if (store.isGameOver) return;
 
-		const nextIndex = currentGuess.value.findIndex(val => val === '');
-		const targetIndex = nextIndex !== -1 ? nextIndex : store.codeLength - 1;
+      const nextIndex = currentGuess.value.findIndex((val) => val === '');
+      const targetIndex = nextIndex !== -1 ? nextIndex : store.codeLength - 1;
 
-		cellRefs.value[targetIndex]?.focus();
-	});
-}
+      cellRefs.value[targetIndex]?.focus();
+   });
+};
 
 const handleCellInput = (event, index) => {
-	const val = event.target.value.replace(/[^0-9]/g, '');
+   const val = event.target.value.replace(/[^0-9]/g, '');
 
-	if (val) {
-		currentGuess.value[index] = val[0];
-		if (index < store.codeLength - 1) {
-			cellRefs.value[index + 1]?.focus();
-		}
-	} else {
-		currentGuess.value[index] = '';
-	}
-}
+   if (val) {
+      currentGuess.value[index] = val[0];
+      if (index < store.codeLength - 1) {
+         cellRefs.value[index + 1]?.focus();
+      }
+   } else {
+      currentGuess.value[index] = '';
+   }
+};
 
 const handleCellKeyDown = (event, index) => {
-	if (event.key === 'Backspace') {
-		if (!currentGuess.value[index] && index > 0) {
-			event.preventDefault();
-			currentGuess.value[index - 1] = '';
-			cellRefs.value[index - 1]?.focus();
-		}
-	} else if (event.key === 'Enter') {
-		handleTry();
-	}
-}
+   if (event.key === 'Backspace') {
+      if (!currentGuess.value[index] && index > 0) {
+         event.preventDefault();
+         currentGuess.value[index - 1] = '';
+         cellRefs.value[index - 1]?.focus();
+      }
+   } else if (event.key === 'Enter') {
+      handleTry();
+   }
+};
 
 const handleTry = () => {
-	if (currentGuess.value.includes('')) {
-		alert(`Код должен состоять ровно из ${store.codeLength} цифр`)
-		return
-	}
+   if (currentGuess.value.includes('')) {
+      alert(`Код должен состоять ровно из ${store.codeLength} цифр`);
+      return;
+   }
 
-	const uniqueDigits = new Set(currentGuess.value)
-	if (uniqueDigits.size !== store.codeLength) {
-		alert('Цифры в коде не должны повторяться')
-		return
-	}
+   const uniqueDigits = new Set(currentGuess.value);
+   if (uniqueDigits.size !== store.codeLength) {
+      alert('Цифры в коде не должны повторяться');
+      return;
+   }
 
-	store.addAttempt(currentGuess.value.join(''));
-	currentGuess.value = Array(store.codeLength).fill('')
-	focusInput()
-}
+   store.addAttempt(currentGuess.value.join(''));
+   currentGuess.value = Array(store.codeLength).fill('');
+   focusInput();
+};
 
 const handleNewGame = () => {
-	store.startNewGame()
-	currentGuess.value = Array(store.codeLength).fill('')
-	cellRefs.value = []
-	focusInput()
-}
+   store.startNewGame();
+   currentGuess.value = Array(store.codeLength).fill('');
+   cellRefs.value = [];
+   focusInput();
+};
 
-watch(() => store.isGameOver, (isOver) => {
-	if (isOver) {
-		setTimeout(() => {
-			if (store.isWon) {
-				alert('Поздравляем! Вы выиграли!');
-			} else {
-				alert(`Вы проиграли. Загаданный код был: ${store.secretCode}`);
-			}
-			handleNewGame();
-		}, 100);
-	}
-})
+watch(
+   () => store.isGameOver,
+   (isOver) => {
+      if (isOver) {
+         setTimeout(() => {
+            if (store.isWon) {
+               alert('Поздравляем! Вы выиграли!');
+            } else {
+               alert(`Вы проиграли. Загаданный код был: ${store.secretCode}`);
+            }
+            handleNewGame();
+         }, 100);
+      }
+   },
+);
 onMounted(() => {
-	handleNewGame();
-})
+   handleNewGame();
+});
 </script>
 
 <template>
-	<div class="game">
-		<div class="game__container full-page-container">
-			<div class="game__top game__menu">
-				<RouterLink :to="{ name: 'start' }" class="game__top-button button">Start page</RouterLink>
-				<div class="game__timer">00:00</div>
-				<button @click="handleNewGame" class="game__top-button button">New game</button>
-			</div>
-			<div class="game__body">
-				<div v-for="n in store.maxAttempts" :key="n" class="game__field field-game">
-					<div class="field-game__attempt-num">{{ n + ")" }}</div>
-					<div class="field-game__attempt">
-						<div class="field-game__attempt-show" v-if="store.attempts[n - 1]">
-							<span v-for="y in store.codeLength" :key="y"
-								:style="{ backgroundColor: store.digitsColors[store.attempts[n - 1].guess[y - 1]] }">
-								{{ store.attempts[n - 1].guess[y - 1] }}
-							</span>
-						</div>
-						<div class="field-game__attempt-show field-game__attempt-show--active"
-							v-else-if="n === store.attempts.length + 1 && !store.isGameOver" @click="focusInput">
-							<span v-for="y in store.codeLength" :key="y"
-								:style="currentGuess[y - 1] ? { backgroundColor: store.digitsColors[currentGuess[y - 1]], color: '#fff', borderColor: store.digitsColors[currentGuess[y - 1]] } : {}">
-								{{ currentGuess[y - 1] }}
-							</span>
-						</div>
-						<div class="field-game__attempt-show field-game__attempt-show--disabled" v-else>
-							<span v-for="y in store.codeLength" :key="y"></span>
-						</div>
-					</div>
-					<div class="field-game__texts">
-						<div class="field-game__text">Bulls: {{ store.attempts[n - 1] ? store.attempts[n - 1].bulls : 0 }}
-						</div>
-						<div class="field-game__text">Cows: {{ store.attempts[n - 1] ? store.attempts[n - 1].cows : 0 }}</div>
-					</div>
-				</div>
-			</div>
-			<div class="game__input game__menu">
-				<div class="code-input__cells">
-					<input v-for="y in store.codeLength" :key="y" :ref="el => cellRefs[y - 1] = el" type="text"
-						inputmode="numeric" pattern="[0-9]*" maxlength="1" class="code-input__cell-input"
-						:class="{ 'code-input__cell-input--active': activeIndex === y - 1 }" :value="currentGuess[y - 1]"
-						:style="currentGuess[y - 1] ? { borderColor: store.digitsColors[currentGuess[y - 1]] } : {}"
-						:disabled="store.isGameOver" @input="handleCellInput($event, y - 1)"
-						@keydown="handleCellKeyDown($event, y - 1)" @focus="activeIndex = y - 1"
-						@blur="activeIndex === y - 1 && (activeIndex = null)" />
-				</div>
-				<button class="button" type='button' @click="handleTry" :disabled="store.isGameOver">
-					Try
-				</button>
-			</div>
-		</div>
-	</div>
+   <div class="game">
+      <div class="game__container full-page-container">
+         <div class="game__top game__menu">
+            <RouterLink :to="{ name: 'start' }" class="game__top-button button">Start page</RouterLink>
+            <div class="game__timer">00:00</div>
+            <button @click="handleNewGame" class="game__top-button button">New game</button>
+         </div>
+         <div class="game__body">
+            <div v-for="n in store.maxAttempts" :key="n" class="game__field field-game">
+               <div class="field-game__attempt-num">{{ n + ')' }}</div>
+               <div class="field-game__attempt">
+                  <div class="field-game__attempt-show" v-if="store.attempts[n - 1]">
+                     <span
+                        v-for="y in store.codeLength"
+                        :key="y"
+                        :style="{ backgroundColor: store.digitsColors[store.attempts[n - 1].guess[y - 1]] }"
+                     >
+                        {{ store.attempts[n - 1].guess[y - 1] }}
+                     </span>
+                  </div>
+                  <div
+                     class="field-game__attempt-show field-game__attempt-show--active"
+                     v-else-if="n === store.attempts.length + 1 && !store.isGameOver"
+                     @click="focusInput"
+                  >
+                     <span
+                        v-for="y in store.codeLength"
+                        :key="y"
+                        :style="
+                           currentGuess[y - 1]
+                              ? {
+                                   backgroundColor: store.digitsColors[currentGuess[y - 1]],
+                                   color: '#fff',
+                                   borderColor: store.digitsColors[currentGuess[y - 1]],
+                                }
+                              : {}
+                        "
+                     >
+                        {{ currentGuess[y - 1] }}
+                     </span>
+                  </div>
+                  <div class="field-game__attempt-show field-game__attempt-show--disabled" v-else>
+                     <span v-for="y in store.codeLength" :key="y"></span>
+                  </div>
+               </div>
+               <div class="field-game__texts">
+                  <div class="field-game__text">
+                     Bulls: {{ store.attempts[n - 1] ? store.attempts[n - 1].bulls : 0 }}
+                  </div>
+                  <div class="field-game__text">Cows: {{ store.attempts[n - 1] ? store.attempts[n - 1].cows : 0 }}</div>
+               </div>
+            </div>
+         </div>
+         <div class="game__input game__menu">
+            <div class="code-input__cells">
+               <input
+                  v-for="y in store.codeLength"
+                  :key="y"
+                  :ref="(el) => (cellRefs[y - 1] = el)"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="1"
+                  class="code-input__cell-input"
+                  :class="{ 'code-input__cell-input--active': activeIndex === y - 1 }"
+                  :value="currentGuess[y - 1]"
+                  :style="currentGuess[y - 1] ? { borderColor: store.digitsColors[currentGuess[y - 1]] } : {}"
+                  :disabled="store.isGameOver"
+                  @input="handleCellInput($event, y - 1)"
+                  @keydown="handleCellKeyDown($event, y - 1)"
+                  @focus="activeIndex = y - 1"
+                  @blur="activeIndex === y - 1 && (activeIndex = null)"
+               />
+            </div>
+            <button class="button" type="button" @click="handleTry" :disabled="store.isGameOver">Try</button>
+         </div>
+      </div>
+   </div>
 </template>
 
 <style lang="scss" scoped>
 .game {
-	padding: toRem(64) 0;
+   padding: toRem(64) 0;
 
-	&__menu {
-		background-color: #fff;
-		position: fixed;
-		bottom: 0;
-		left: 50%;
-		transform: translate(-50%, 0px);
-		padding: 16px 8px 32px;
-		border-radius: 16px 16px 0px 0;
-		z-index: 5;
-		max-width: toRem(400);
-		width: 100%;
-	}
+   &__menu {
+      background-color: #fff;
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 0px);
+      padding: 16px 8px 32px;
+      border-radius: 16px 16px 0px 0;
+      z-index: 5;
+      max-width: toRem(400);
+      width: 100%;
+   }
 
-	&__top {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: toRem(16);
-		margin-bottom: toRem(32);
-		padding: 32px 8px 16px;
-		border-radius: 0px 0px 16px 16px;
-		top: 0;
-		bottom: auto;
-	}
+   &__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: toRem(16);
+      margin-bottom: toRem(32);
+      padding: 32px 8px 16px;
+      border-radius: 0px 0px 16px 16px;
+      top: 0;
+      bottom: auto;
+   }
 
-	&__top-button {
-		padding: toRem(12) toRem(16);
-		border-radius: 16px;
+   &__top-button {
+      padding: toRem(12) toRem(16);
+      border-radius: 16px;
 
-		@media (max-width:$mobileSmall) {
-			font-size: toRem(14);
-			padding: toRem(12);
-		}
-	}
+      @media (max-width: $mobileSmall) {
+         font-size: toRem(14);
+         padding: toRem(12);
+      }
+   }
 
-	&__timer {
-		font-size: toRem(18);
-		font-weight: 600;
-	}
+   &__timer {
+      font-size: toRem(18);
+      font-weight: 600;
+   }
 
-	&__body {
-		width: 100%;
-	}
+   &__body {
+      width: 100%;
+   }
 
-	&__field {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
+   &__field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
 
-		&:not(:last-child) {
-			margin-bottom: toRem(16);
-		}
-	}
+      &:not(:last-child) {
+         margin-bottom: toRem(16);
+      }
+   }
 
-	&__input {
-		margin-top: toRem(32);
-		display: flex;
-		align-items: center;
-		gap: toRem(16);
-		justify-content: space-between;
+   &__input {
+      margin-top: toRem(32);
+      display: flex;
+      align-items: center;
+      gap: toRem(16);
+      justify-content: space-between;
 
-		button {
-			padding: toRem(12) toRem(16);
-			border-radius: 16px;
-			width: toRem(70);
-			height: toRem(50);
-			flex: 0 0 toRem(70);
+      button {
+         padding: toRem(12) toRem(16);
+         border-radius: 16px;
+         width: toRem(70);
+         height: toRem(50);
+         flex: 0 0 toRem(70);
 
-			&:disabled {
-				opacity: 0.5;
-				cursor: default;
+         &:disabled {
+            opacity: 0.5;
+            cursor: default;
 
-				@media (any-hover: hover) {
-					&:hover {
-						opacity: 0.5;
-						background-color: $orangeColor;
-					}
-				}
-			}
-		}
-	}
+            @media (any-hover: hover) {
+               &:hover {
+                  opacity: 0.5;
+                  background-color: $orangeColor;
+               }
+            }
+         }
+      }
+   }
 }
 
 .code-input {
-	&__cells {
-		display: flex;
-		gap: toRem(8);
-	}
+   &__cells {
+      display: flex;
+      gap: toRem(8);
+   }
 
-	&__cell-input {
-		position: relative;
-		width: toRem(50);
-		height: toRem(50);
-		border-radius: 50%;
-		border: 2px solid #ccc;
-		display: flex;
-		text-align: center;
-		align-items: center;
-		justify-content: center;
-		font-size: toRem(24);
-		font-weight: 600;
-		background-color: #fcfcfc;
-		transition: all 0.2s ease;
-		color: #000;
-		outline: none;
+   &__cell-input {
+      position: relative;
+      width: toRem(50);
+      height: toRem(50);
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      display: flex;
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      font-size: toRem(24);
+      font-weight: 600;
+      background-color: #fcfcfc;
+      transition: all 0.2s ease;
+      color: #000;
+      outline: none;
 
-		&--active {
-			border-color: $orangeColor;
-		}
+      &--active {
+         border-color: $orangeColor;
+      }
 
-		&:disabled {
-			background-color: #f5f5f5;
-			cursor: default;
-		}
-	}
+      &:disabled {
+         background-color: #f5f5f5;
+         cursor: default;
+      }
+   }
 }
 
-
 .field-game {
-	&__attempt-num {
-		font-size: toRem(20);
-		flex: 0 0 toRem(29);
-		margin-right: toRem(8);
-	}
+   &__attempt-num {
+      font-size: toRem(20);
+      flex: 0 0 toRem(29);
+      margin-right: toRem(8);
+   }
 
-	&__attempt-show {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: toRem(8);
+   &__attempt-show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: toRem(8);
 
-		span {
-			border-radius: 50%;
-			font-size: toRem(24);
-			background-color: $orangeColor;
-			transition: all 0.2s;
-			color: #fff;
-			width: toRem(40);
-			height: toRem(40);
-			flex: 0 0 toRem(40);
-			display: inline-flex;
-			justify-content: center;
-			align-items: center;
-		}
+      span {
+         border-radius: 50%;
+         font-size: toRem(24);
+         background-color: $orangeColor;
+         transition: all 0.2s;
+         color: #fff;
+         width: toRem(40);
+         height: toRem(40);
+         flex: 0 0 toRem(40);
+         display: inline-flex;
+         justify-content: center;
+         align-items: center;
+      }
 
-		&--active {
-			span {
-				background-color: #fff;
-				border: 2px solid $orangeColor;
-				color: #000;
+      &--active {
+         span {
+            background-color: #fff;
+            border: 2px solid $orangeColor;
+            color: #000;
 
-				&:empty {
-					border-color: #ccc;
-				}
-			}
-		}
+            &:empty {
+               border-color: #ccc;
+            }
+         }
+      }
 
-		&--disabled {
-			span {
-				background-color: #ccc;
-				opacity: 0.5;
-			}
-		}
-	}
+      &--disabled {
+         span {
+            background-color: #ccc;
+            opacity: 0.5;
+         }
+      }
+   }
 
-	&__texts {
-		display: flex;
-		flex-direction: column;
-		align-items: end;
-		gap: toRem(8);
-		flex: 0 0 toRem(70);
-	}
+   &__texts {
+      display: flex;
+      flex-direction: column;
+      align-items: end;
+      gap: toRem(8);
+      flex: 0 0 toRem(70);
+   }
 
-	&__text {
-		white-space: nowrap;
-	}
+   &__text {
+      white-space: nowrap;
+   }
 }
 </style>

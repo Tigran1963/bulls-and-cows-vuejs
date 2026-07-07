@@ -1,5 +1,5 @@
-import { expect, test, describe, vi, beforeEach, afterEach } from 'vitest'
-import { generateSecretCode, checkAttempt, getRandomInt } from "@/core/functions";
+import { expect, test, describe, vi, beforeEach, afterEach } from 'vitest';
+import { generateSecretCode, checkAttempt, getRandomInt } from '@/core/functions';
 
 describe('getRandomInt', () => {
    beforeEach(() => {
@@ -26,7 +26,6 @@ describe('getRandomInt', () => {
    });
 });
 
-
 describe('generateSecretCode', () => {
    test('генерирует код правильной длины', () => {
       expect(generateSecretCode(4).length).toBe(4);
@@ -41,7 +40,6 @@ describe('generateSecretCode', () => {
       expect(/^\d+$/.test(code)).toBe(true); // проверка, что это только цифры
    });
 });
-
 
 describe('checkAttempt', () => {
    test('все быки', () => {

@@ -1,12 +1,9 @@
 <script setup>
 import { useGameStore } from '@/store/gameStore';
 
-const store = useGameStore()
+const store = useGameStore();
 </script>
 
-<template>
-	admin
-</template>
+<template>admin</template>
 
-<style lang="scss" scoped>
-</style>
+<style lang="scss" scoped></style>
