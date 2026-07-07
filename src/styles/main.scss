@@ -125,9 +125,9 @@ body {
 }
 
 .full-page-container {
-	padding-top: toRem(60);
-	padding-bottom: toRem(60);
-	min-height: 100vh;
+	padding-top: toRem(64);
+	padding-bottom: toRem(64);
+	min-height: calc(100vh - 128px);
 	display: flex;
 	flex-direction: column;
 	align-items: center;

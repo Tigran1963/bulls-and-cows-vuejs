@@ -82,7 +82,7 @@ const handleMaxAttemptsInput = (event) => {
 			border: 1px solid #000;
 			border-radius: 16px;
 			height: toRem(40);
-			width: toRem(60);
+			width: toRem(85);
 			padding: toRem(8) toRem(16);
 			background-color: #fff;
 			font-size: toRem(24);

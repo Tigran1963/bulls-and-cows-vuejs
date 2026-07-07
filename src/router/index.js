@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import SettingsView from "@/views/SettingsView.vue";
+import SettingsView from "@/views/settings/SettingsView.vue";
 import GameView from "@/views/GameView.vue";
 import StartView from "@/views/StartView.vue";
 

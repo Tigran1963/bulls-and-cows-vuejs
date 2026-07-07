@@ -10,6 +10,18 @@ export const useGameStore = defineStore('game', () => {
 	const attempts = ref([])
 	const isGameOver = ref(false)
 	const isWon = ref(false)
+	const digitsColors = ref({
+		'1': '#FF6B6B',
+		'2': '#FF9F1C',
+		'3': '#FFD93D',
+		'4': '#6BCB77',
+		'5': '#00F5D4',
+		'6': '#64a3fc',
+		'7': '#0f6fb3',
+		'8': '#9B5DE5',
+		'9': '#A06A42',
+		'0': '#000'
+	})
 
 	const startNewGame = () => {
 		secretCode.value = generateSecretCode(codeLength.value)
@@ -59,6 +71,7 @@ export const useGameStore = defineStore('game', () => {
 		attempts,
 		isGameOver,
 		isWon,
+		digitsColors,
 		setCodeLength,
 		setMaxAttempts,
 		startNewGame,
