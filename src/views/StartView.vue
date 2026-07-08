@@ -1,7 +1,3 @@
-<script setup>
-import { useGameStore } from '@/store/gameStore';
-</script>
-
 <template>
    <div class="start-screen">
       <div class="start-screen__container full-page-container">

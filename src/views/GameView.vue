@@ -1,20 +1,22 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
-import { useGameStore } from '@/store/gameStore';
+import { useGameStore } from '@/stores/gameStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import Header from '@/components/Header.vue';
 import Footer from '@/components/Footer.vue';
 
-const store = useGameStore();
-const currentGuess = ref(Array(store.codeLength).fill(''));
+const gameStore = useGameStore();
+const settingsStore = useSettingsStore();
+const currentGuess = ref(Array(settingsStore.currentDifficulty.codeLength).fill(''));
 const cellRefs = ref([]);
 const activeIndex = ref(null);
 
 const focusInput = () => {
    nextTick(() => {
-      if (store.isGameOver) return;
+      if (gameStore.isGameOver) return;
 
       const nextIndex = currentGuess.value.findIndex((val) => val === '');
-      const targetIndex = nextIndex !== -1 ? nextIndex : store.codeLength - 1;
+      const targetIndex = nextIndex !== -1 ? nextIndex : settingsStore.currentDifficulty.codeLength - 1;
 
       cellRefs.value[targetIndex]?.focus();
    });
@@ -25,7 +27,7 @@ const handleCellInput = (event, index) => {
 
    if (val) {
       currentGuess.value[index] = val[0];
-      if (index < store.codeLength - 1) {
+      if (index < settingsStore.currentDifficulty.codeLength - 1) {
          cellRefs.value[index + 1]?.focus();
       }
    } else {
@@ -47,37 +49,39 @@ const handleCellKeyDown = (event, index) => {
 
 const handleTry = () => {
    if (currentGuess.value.includes('')) {
-      alert(`Код должен состоять ровно из ${store.codeLength} цифр`);
+      alert(`The code must consist of exactly ${settingsStore.currentDifficulty.codeLength} digits`);
       return;
    }
-
-   const uniqueDigits = new Set(currentGuess.value);
-   if (uniqueDigits.size !== store.codeLength) {
-      alert('Цифры в коде не должны повторяться');
-      return;
+	
+   if (!settingsStore.digitsRepeatable) {
+      const uniqueDigits = new Set(currentGuess.value);
+      if (uniqueDigits.size !== settingsStore.currentDifficulty.codeLength) {
+         alert('The digits in the code must not repeat');
+         return;
+      }
    }
 
-   store.addAttempt(currentGuess.value.join(''));
-   currentGuess.value = Array(store.codeLength).fill('');
+   gameStore.addAttempt(currentGuess.value.join(''));
+   currentGuess.value = Array(settingsStore.currentDifficulty.codeLength).fill('');
    focusInput();
 };
 
 const handleNewGame = () => {
-   store.startNewGame();
-   currentGuess.value = Array(store.codeLength).fill('');
+   gameStore.startNewGame();
+   currentGuess.value = Array(settingsStore.currentDifficulty.codeLength).fill('');
    cellRefs.value = [];
    focusInput();
 };
 
 watch(
-   () => store.isGameOver,
+   () => gameStore.isGameOver,
    (isOver) => {
       if (isOver) {
          setTimeout(() => {
-            if (store.isWon) {
-               alert('Поздравляем! Вы выиграли!');
+            if (gameStore.isWon) {
+               alert('Congratulations! You won!');
             } else {
-               alert(`Вы проиграли. Загаданный код был: ${store.secretCode}`);
+               alert(`You lost. The secret code was: ${gameStore.secretCode}`);
             }
             handleNewGame();
          }, 100);
@@ -99,32 +103,32 @@ onMounted(() => {
          </div>
       </Header>
       <div class="game__container">
-         <div v-for="n in store.maxAttempts" :key="n" class="game__field field-game">
+         <div v-for="n in settingsStore.currentDifficulty.maxAttempts" :key="n" class="game__field field-game">
             <div class="field-game__attempt-num">{{ n + ')' }}</div>
             <div class="field-game__attempt">
-               <div class="field-game__attempt-show" v-if="store.attempts[n - 1]">
+               <div class="field-game__attempt-show" v-if="gameStore.attempts[n - 1]">
                   <span
-                     v-for="y in store.codeLength"
+                     v-for="y in settingsStore.currentDifficulty.codeLength"
                      :key="y"
-                     :style="{ backgroundColor: store.digitsColors[store.attempts[n - 1].guess[y - 1]] }"
+                     :style="{ backgroundColor: settingsStore.digitsColors[gameStore.attempts[n - 1].guess[y - 1]] }"
                   >
-                     {{ store.attempts[n - 1].guess[y - 1] }}
+                     {{ gameStore.attempts[n - 1].guess[y - 1] }}
                   </span>
                </div>
                <div
                   class="field-game__attempt-show field-game__attempt-show--active"
-                  v-else-if="n === store.attempts.length + 1 && !store.isGameOver"
+                  v-else-if="n === gameStore.attempts.length + 1 && !gameStore.isGameOver"
                   @click="focusInput"
                >
                   <span
-                     v-for="y in store.codeLength"
+                     v-for="y in settingsStore.currentDifficulty.codeLength"
                      :key="y"
                      :style="
                         currentGuess[y - 1]
                            ? {
-                                backgroundColor: store.digitsColors[currentGuess[y - 1]],
+                                backgroundColor: settingsStore.digitsColors[currentGuess[y - 1]],
                                 color: '#fff',
-                                borderColor: store.digitsColors[currentGuess[y - 1]],
+                                borderColor: settingsStore.digitsColors[currentGuess[y - 1]],
                              }
                            : {}
                      "
@@ -133,12 +137,16 @@ onMounted(() => {
                   </span>
                </div>
                <div class="field-game__attempt-show field-game__attempt-show--disabled" v-else>
-                  <span v-for="y in store.codeLength" :key="y"></span>
+                  <span v-for="y in settingsStore.currentDifficulty.codeLength" :key="y"></span>
                </div>
             </div>
             <div class="field-game__texts">
-               <div class="field-game__text">Bulls: {{ store.attempts[n - 1] ? store.attempts[n - 1].bulls : 0 }}</div>
-               <div class="field-game__text">Cows: {{ store.attempts[n - 1] ? store.attempts[n - 1].cows : 0 }}</div>
+               <div class="field-game__text">
+                  Bulls: {{ gameStore.attempts[n - 1] ? gameStore.attempts[n - 1].bulls : 0 }}
+               </div>
+               <div class="field-game__text">
+                  Cows: {{ gameStore.attempts[n - 1] ? gameStore.attempts[n - 1].cows : 0 }}
+               </div>
             </div>
          </div>
       </div>
@@ -146,7 +154,7 @@ onMounted(() => {
          <div class="code-input">
             <div class="code-input__cells">
                <input
-                  v-for="y in store.codeLength"
+                  v-for="y in settingsStore.currentDifficulty.codeLength"
                   :key="y"
                   :ref="(el) => (cellRefs[y - 1] = el)"
                   type="text"
@@ -157,15 +165,15 @@ onMounted(() => {
                   class="code-input__cell-input"
                   :class="{ 'code-input__cell-input--active': activeIndex === y - 1 }"
                   :value="currentGuess[y - 1]"
-                  :style="currentGuess[y - 1] ? { borderColor: store.digitsColors[currentGuess[y - 1]] } : {}"
-                  :disabled="store.isGameOver"
+                  :style="currentGuess[y - 1] ? { borderColor: settingsStore.digitsColors[currentGuess[y - 1]] } : {}"
+                  :disabled="gameStore.isGameOver"
                   @input="handleCellInput($event, y - 1)"
                   @keydown="handleCellKeyDown($event, y - 1)"
                   @focus="activeIndex = y - 1"
                   @blur="activeIndex === y - 1 && (activeIndex = null)"
                />
             </div>
-            <button class="button" type="button" @click="handleTry" :disabled="store.isGameOver">Try</button>
+            <button class="button" type="button" @click="handleTry" :disabled="gameStore.isGameOver">Try</button>
          </div>
       </Footer>
    </div>

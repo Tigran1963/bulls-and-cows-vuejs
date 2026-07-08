@@ -61,4 +61,11 @@ describe('checkAttempt', () => {
    test('работает корректно, если переданы числа, а не строки', () => {
       expect(checkAttempt(1234, 1234)).toEqual({ bulls: 4, cows: 0 });
    });
+
+   test('работает корректно, если цифра повторяются', () => {
+      expect(checkAttempt('1444', '1123')).toEqual({ bulls: 1, cows: 0 });
+      expect(checkAttempt('1111', '1234')).toEqual({ bulls: 1, cows: 0 });
+      expect(checkAttempt('1211', '1122')).toEqual({ bulls: 1, cows: 2 });
+      expect(checkAttempt('2211', '1122')).toEqual({ bulls: 0, cows: 4 });
+   });
 });
