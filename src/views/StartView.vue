@@ -8,7 +8,8 @@ import { useGameStore } from '@/store/gameStore';
          <h1 class="start-screen__title page-title">Bulls & Cows</h1>
          <div class="start-screen__subtitle">Break the code!</div>
          <RouterLink :to="{ name: 'game' }" class="start-screen__button button">Play</RouterLink>
-         <RouterLink :to="{ name: 'settings' }" class="start-screen__button button">Settings</RouterLink>
+         <RouterLink :to="{ name: 'user-settings' }" class="start-screen__button button">User Settings</RouterLink>
+         <RouterLink :to="{ name: 'admin-settings' }" class="start-screen__button button">Admin Settings</RouterLink>
       </div>
    </div>
 </template>

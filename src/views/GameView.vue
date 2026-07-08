@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
 import { useGameStore } from '@/store/gameStore';
+import Header from '@/components/Header.vue';
+import Footer from '@/components/Footer.vue';
 
 const store = useGameStore();
 const currentGuess = ref(Array(store.codeLength).fill(''));
@@ -88,66 +90,67 @@ onMounted(() => {
 </script>
 
 <template>
-   <div class="game">
-      <div class="game__container full-page-container">
-         <div class="game__top game__menu">
+   <div class="game full-page-container">
+      <Header>
+         <div class="game__top">
             <RouterLink :to="{ name: 'start' }" class="game__top-button button">Start page</RouterLink>
             <div class="game__timer">00:00</div>
             <button @click="handleNewGame" class="game__top-button button">New game</button>
          </div>
-         <div class="game__body">
-            <div v-for="n in store.maxAttempts" :key="n" class="game__field field-game">
-               <div class="field-game__attempt-num">{{ n + ')' }}</div>
-               <div class="field-game__attempt">
-                  <div class="field-game__attempt-show" v-if="store.attempts[n - 1]">
-                     <span
-                        v-for="y in store.codeLength"
-                        :key="y"
-                        :style="{ backgroundColor: store.digitsColors[store.attempts[n - 1].guess[y - 1]] }"
-                     >
-                        {{ store.attempts[n - 1].guess[y - 1] }}
-                     </span>
-                  </div>
-                  <div
-                     class="field-game__attempt-show field-game__attempt-show--active"
-                     v-else-if="n === store.attempts.length + 1 && !store.isGameOver"
-                     @click="focusInput"
+      </Header>
+      <div class="game__container">
+         <div v-for="n in store.maxAttempts" :key="n" class="game__field field-game">
+            <div class="field-game__attempt-num">{{ n + ')' }}</div>
+            <div class="field-game__attempt">
+               <div class="field-game__attempt-show" v-if="store.attempts[n - 1]">
+                  <span
+                     v-for="y in store.codeLength"
+                     :key="y"
+                     :style="{ backgroundColor: store.digitsColors[store.attempts[n - 1].guess[y - 1]] }"
                   >
-                     <span
-                        v-for="y in store.codeLength"
-                        :key="y"
-                        :style="
-                           currentGuess[y - 1]
-                              ? {
-                                   backgroundColor: store.digitsColors[currentGuess[y - 1]],
-                                   color: '#fff',
-                                   borderColor: store.digitsColors[currentGuess[y - 1]],
-                                }
-                              : {}
-                        "
-                     >
-                        {{ currentGuess[y - 1] }}
-                     </span>
-                  </div>
-                  <div class="field-game__attempt-show field-game__attempt-show--disabled" v-else>
-                     <span v-for="y in store.codeLength" :key="y"></span>
-                  </div>
+                     {{ store.attempts[n - 1].guess[y - 1] }}
+                  </span>
                </div>
-               <div class="field-game__texts">
-                  <div class="field-game__text">
-                     Bulls: {{ store.attempts[n - 1] ? store.attempts[n - 1].bulls : 0 }}
-                  </div>
-                  <div class="field-game__text">Cows: {{ store.attempts[n - 1] ? store.attempts[n - 1].cows : 0 }}</div>
+               <div
+                  class="field-game__attempt-show field-game__attempt-show--active"
+                  v-else-if="n === store.attempts.length + 1 && !store.isGameOver"
+                  @click="focusInput"
+               >
+                  <span
+                     v-for="y in store.codeLength"
+                     :key="y"
+                     :style="
+                        currentGuess[y - 1]
+                           ? {
+                                backgroundColor: store.digitsColors[currentGuess[y - 1]],
+                                color: '#fff',
+                                borderColor: store.digitsColors[currentGuess[y - 1]],
+                             }
+                           : {}
+                     "
+                  >
+                     {{ currentGuess[y - 1] }}
+                  </span>
+               </div>
+               <div class="field-game__attempt-show field-game__attempt-show--disabled" v-else>
+                  <span v-for="y in store.codeLength" :key="y"></span>
                </div>
             </div>
+            <div class="field-game__texts">
+               <div class="field-game__text">Bulls: {{ store.attempts[n - 1] ? store.attempts[n - 1].bulls : 0 }}</div>
+               <div class="field-game__text">Cows: {{ store.attempts[n - 1] ? store.attempts[n - 1].cows : 0 }}</div>
+            </div>
          </div>
-         <div class="game__input game__menu">
+      </div>
+      <Footer>
+         <div class="code-input">
             <div class="code-input__cells">
                <input
                   v-for="y in store.codeLength"
                   :key="y"
                   :ref="(el) => (cellRefs[y - 1] = el)"
                   type="text"
+                  autocomplete="off"
                   inputmode="numeric"
                   pattern="[0-9]*"
                   maxlength="1"
@@ -164,24 +167,16 @@ onMounted(() => {
             </div>
             <button class="button" type="button" @click="handleTry" :disabled="store.isGameOver">Try</button>
          </div>
-      </div>
+      </Footer>
    </div>
 </template>
 
 <style lang="scss" scoped>
 .game {
-   padding: toRem(64) 0;
+   padding-top: toRem(104);
+   padding-bottom: toRem(128);
 
-   &__menu {
-      background-color: #fff;
-      position: fixed;
-      bottom: 0;
-      left: 50%;
-      transform: translate(-50%, 0px);
-      padding: 16px 8px 32px;
-      border-radius: 16px 16px 0px 0;
-      z-index: 5;
-      max-width: toRem(400);
+   &__container {
       width: 100%;
    }
 
@@ -190,11 +185,6 @@ onMounted(() => {
       align-items: center;
       justify-content: space-between;
       gap: toRem(16);
-      margin-bottom: toRem(32);
-      padding: 32px 8px 16px;
-      border-radius: 0px 0px 16px 16px;
-      top: 0;
-      bottom: auto;
    }
 
    &__top-button {
@@ -225,37 +215,38 @@ onMounted(() => {
          margin-bottom: toRem(16);
       }
    }
+}
 
-   &__input {
-      margin-top: toRem(32);
-      display: flex;
-      align-items: center;
-      gap: toRem(16);
-      justify-content: space-between;
+.code-input {
+   display: flex;
+   align-items: center;
+   gap: toRem(16);
+   justify-content: space-between;
 
-      button {
-         padding: toRem(12) toRem(16);
-         border-radius: 16px;
-         width: toRem(70);
-         height: toRem(50);
-         flex: 0 0 toRem(70);
+   button {
+      padding: toRem(12) toRem(16);
+      border-radius: 16px;
+      width: toRem(70);
+      height: toRem(50);
+      flex: 0 0 toRem(70);
+      @media (max-width: toEm(390)) {
+         height: toRem(40);
+         width: toRem(60);
+         flex: 0 0 toRem(60);
+      }
+      &:disabled {
+         opacity: 0.5;
+         cursor: default;
 
-         &:disabled {
-            opacity: 0.5;
-            cursor: default;
-
-            @media (any-hover: hover) {
-               &:hover {
-                  opacity: 0.5;
-                  background-color: $orangeColor;
-               }
+         @media (any-hover: hover) {
+            &:hover {
+               opacity: 0.5;
+               background-color: $orangeColor;
             }
          }
       }
    }
-}
 
-.code-input {
    &__cells {
       display: flex;
       gap: toRem(8);
@@ -277,7 +268,11 @@ onMounted(() => {
       transition: all 0.2s ease;
       color: #000;
       outline: none;
-
+      @media (max-width: toEm(390)) {
+         width: toRem(40);
+         height: toRem(40);
+         font-size: toRem(22);
+      }
       &--active {
          border-color: $orangeColor;
       }
@@ -314,6 +309,11 @@ onMounted(() => {
          display: inline-flex;
          justify-content: center;
          align-items: center;
+         @media (max-width: toEm(390)) {
+            width: toRem(30);
+            height: toRem(30);
+            flex: 0 0 toRem(30);
+         }
       }
 
       &--active {
