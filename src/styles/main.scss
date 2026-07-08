@@ -125,8 +125,7 @@ body {
 }
 
 .full-page-container {
-	padding-top: toRem(60);
-	padding-bottom: toRem(60);
+	padding: toRem(32) 0;
 	min-height: 100vh;
 	display: flex;
 	flex-direction: column;
