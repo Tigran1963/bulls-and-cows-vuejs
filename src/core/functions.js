@@ -33,17 +33,41 @@ export function getRandomInt(max = 10) {
    return Math.floor(Math.random() * max);
 }
 
-export function generateSecretCode(length, repeatable) {
-   const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+function getCharPosition(char) {
+   const code = char.toUpperCase().charCodeAt(0);
+   if (code >= 48 && code <= 57) return code - 48; // '0'-'9'
+   if (code >= 65 && code <= 70) return code - 55; // 'A'-'F'
+   return -1;
+}
+
+export function expandRange(range) {
+   const defaultDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+   const allDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+
+   if (!range || typeof range !== 'string') return defaultDigits;
+
+   const parts = range.split('-');
+   if (parts.length !== 2) return defaultDigits;
+
+   const startPos = getCharPosition(parts[0]);
+   const endPos = getCharPosition(parts[1]);
+
+   if (startPos === -1 || endPos === -1) return defaultDigits;
+
+   return allDigits.slice(startPos, endPos + 1);
+}
+
+export function generateSecretCode(length, range, repeatable = true) {
+   const availableDigits = expandRange(range);
    let code = '';
 
    for (let i = 0; i < length; i++) {
-      const randomIndex = getRandomInt(digits.length);
-      code += digits[randomIndex];
+      const randomIndex = Math.floor(Math.random() * availableDigits.length);
+      code += availableDigits[randomIndex];
       if (!repeatable) {
-         digits.splice(randomIndex, 1);
+         availableDigits.splice(randomIndex, 1);
       }
    }
-
+   
    return code;
 }

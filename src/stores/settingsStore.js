@@ -16,15 +16,21 @@ export const useSettingsStore = defineStore('settings', () => {
          8: '#9B5DE5',
          9: '#A06A42',
          0: '#000000',
-      },
+         A: '#702515',
+         B: '#80CF8F',
+         C: '#56E8DE',
+         D: '#9DADF5',
+         E: '#FF5EC7',
+         F: '#C4020E',
+      }
    );
    const difficulties = ref(
       JSON.parse(localStorage.getItem('game_difficulties')) || [
-         { id: 'easy', name: 'Easy', maxAttempts: 10, codeLength: 4 },
-         { id: 'medium', name: 'Medium', maxAttempts: 8, codeLength: 4 },
-         { id: 'hard', name: 'Hard', maxAttempts: 6, codeLength: 5 },
-         { id: 'extreme', name: 'Extreme', maxAttempts: 4, codeLength: 5 },
-      ],
+         { id: 'easy', name: 'Easy', maxAttempts: 10, codeLength: 4, range: '1-6' },
+         { id: 'medium', name: 'Medium', maxAttempts: 8, codeLength: 4, range: '1-9' },
+         { id: 'hard', name: 'Hard', maxAttempts: 6, codeLength: 5, range: '1-A' },
+         { id: 'extreme', name: 'Extreme', maxAttempts: 4, codeLength: 5, range: '1-F' },
+      ]
    );
    const currentDifficultyId = ref(localStorage.getItem('game_current_difficulty') || 'medium');
 
@@ -53,7 +59,7 @@ export const useSettingsStore = defineStore('settings', () => {
       if (diff) {
          if (params.maxAttempts) diff.maxAttempts = parseInt(params.maxAttempts);
          if (params.codeLength) diff.codeLength = parseInt(params.codeLength);
-         if (params.base) diff.base = parseInt(params.base);
+         if (params.range) diff.range = params.range;
          localStorage.setItem('game_difficulties', JSON.stringify(difficulties.value));
       }
    };

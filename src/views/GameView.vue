@@ -23,7 +23,7 @@ const focusInput = () => {
 };
 
 const handleCellInput = (event, index) => {
-   const val = event.target.value.replace(/[^0-9]/g, '');
+   const val = event.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
 
    if (val) {
       currentGuess.value[index] = val[0];
@@ -52,7 +52,7 @@ const handleTry = () => {
       alert(`The code must consist of exactly ${settingsStore.currentDifficulty.codeLength} digits`);
       return;
    }
-	
+
    if (!settingsStore.digitsRepeatable) {
       const uniqueDigits = new Set(currentGuess.value);
       if (uniqueDigits.size !== settingsStore.currentDifficulty.codeLength) {
@@ -86,7 +86,7 @@ watch(
             handleNewGame();
          }, 100);
       }
-   },
+   }
 );
 onMounted(() => {
    handleNewGame();
@@ -159,8 +159,7 @@ onMounted(() => {
                   :ref="(el) => (cellRefs[y - 1] = el)"
                   type="text"
                   autocomplete="off"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
+                  pattern="[0-9A-Fa-f]*"
                   maxlength="1"
                   class="code-input__cell-input"
                   :class="{ 'code-input__cell-input--active': activeIndex === y - 1 }"
