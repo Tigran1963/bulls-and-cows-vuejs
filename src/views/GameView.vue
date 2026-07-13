@@ -48,7 +48,7 @@ const handleCellKeyDown = (event, index) => {
 };
 
 // timer
-const timerTime = 6;
+const timerTime = 600;
 const elapsedSeconds = ref(timerTime);
 const timerInterval = ref(null);
 
