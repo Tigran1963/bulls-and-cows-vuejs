@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import UserSettingsLayout from '@/layouts/UserSettingsLayout.vue';
-import AdminSettingsLayout from '@/layouts/AdminSettingsLayout.vue';
-
 import GameView from '@/views/GameView.vue';
 import StartView from '@/views/StartView.vue';
 import UserSettingsView from '@/views/settings/UserSettingsView.vue';
@@ -15,25 +12,19 @@ const router = createRouter({
       { path: '/game', name: 'game', component: GameView },
       {
          path: '/settings',
-         component: UserSettingsLayout,
-         children: [
-            {
-               path: '',
-               name: 'user-settings',
-               component: UserSettingsView,
-            },
-         ],
+         name: 'user-settings',
+         component: UserSettingsView,
+         meta: {
+            layout: 'userSettings',
+         },
       },
-		{
+      {
          path: '/admin-settings',
-         component: AdminSettingsLayout,
-         children: [
-            {
-               path: '',
-               name: 'admin-settings',
-               component: AdminSettingsView,
-            },
-         ],
+         name: 'admin-settings',
+         component: AdminSettingsView,
+         meta: {
+            layout: 'adminSettings',
+         },
       },
    ],
 });

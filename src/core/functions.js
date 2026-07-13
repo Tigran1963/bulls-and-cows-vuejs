@@ -29,8 +29,8 @@ export function checkAttempt(guess, secret) {
    return { bulls, cows };
 }
 
-export function getRandomInt(max = 10) {
-   return Math.floor(Math.random() * max);
+export function getRandomInt(min = 0, max = 10) {
+   return Math.floor(min + Math.random() * (max + 1 - min));
 }
 
 function getCharPosition(char) {
@@ -42,7 +42,7 @@ function getCharPosition(char) {
 
 export function expandRange(range) {
    const defaultDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-   const allDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'];
+   const allDigits = [...defaultDigits, 'A', 'B', 'C', 'D', 'E', 'F'];
 
    if (!range || typeof range !== 'string') return defaultDigits;
 
@@ -62,7 +62,7 @@ export function generateSecretCode(length, range, repeatable = true) {
    let code = '';
 
    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * availableDigits.length);
+      const randomIndex = getRandomInt(1, availableDigits.length - 1);
       code += availableDigits[randomIndex];
       if (!repeatable) {
          availableDigits.splice(randomIndex, 1);

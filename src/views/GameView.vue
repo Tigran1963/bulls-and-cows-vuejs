@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useGameStore } from '@/stores/gameStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import Header from '@/components/Header.vue';
@@ -8,6 +8,8 @@ import Footer from '@/components/Footer.vue';
 const gameStore = useGameStore();
 const settingsStore = useSettingsStore();
 const currentGuess = ref(Array(settingsStore.currentDifficulty.codeLength).fill(''));
+
+// input
 const cellRefs = ref([]);
 const activeIndex = ref(null);
 
@@ -21,7 +23,6 @@ const focusInput = () => {
       cellRefs.value[targetIndex]?.focus();
    });
 };
-
 const handleCellInput = (event, index) => {
    const val = event.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
 
@@ -34,7 +35,6 @@ const handleCellInput = (event, index) => {
       currentGuess.value[index] = '';
    }
 };
-
 const handleCellKeyDown = (event, index) => {
    if (event.key === 'Backspace') {
       if (!currentGuess.value[index] && index > 0) {
@@ -47,6 +47,35 @@ const handleCellKeyDown = (event, index) => {
    }
 };
 
+// timer
+const timerTime = 6;
+const elapsedSeconds = ref(timerTime);
+const timerInterval = ref(null);
+
+const formatTime = (seconds) => {
+   const mins = Math.floor(seconds / 60);
+   const secs = seconds % 60;
+   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+};
+const startTimer = () => {
+   stopTimer();
+   elapsedSeconds.value = timerTime;
+   timerInterval.value = setInterval(() => {
+      elapsedSeconds.value--;
+   }, 1000);
+};
+const stopTimer = () => {
+   if (timerInterval.value) {
+      clearInterval(timerInterval.value);
+      timerInterval.value = null;
+   }
+};
+const resetTimer = () => {
+   stopTimer();
+   elapsedSeconds.value = timerTime;
+};
+
+// game logic
 const handleTry = () => {
    if (currentGuess.value.includes('')) {
       alert(`The code must consist of exactly ${settingsStore.currentDifficulty.codeLength} digits`);
@@ -70,13 +99,25 @@ const handleNewGame = () => {
    gameStore.startNewGame();
    currentGuess.value = Array(settingsStore.currentDifficulty.codeLength).fill('');
    cellRefs.value = [];
+   resetTimer();
+   startTimer();
    focusInput();
 };
 
 watch(
+   () => elapsedSeconds.value,
+   (seconds) => {
+      if (seconds <= 0) {
+         stopTimer();
+         gameStore.setLostGame();
+      }
+   }
+);
+watch(
    () => gameStore.isGameOver,
    (isOver) => {
       if (isOver) {
+         stopTimer();
          setTimeout(() => {
             if (gameStore.isWon) {
                alert('Congratulations! You won!');
@@ -88,8 +129,12 @@ watch(
       }
    }
 );
+
 onMounted(() => {
    handleNewGame();
+});
+onUnmounted(() => {
+   stopTimer();
 });
 </script>
 
@@ -98,7 +143,7 @@ onMounted(() => {
       <Header>
          <div class="game__top">
             <RouterLink :to="{ name: 'start' }" class="game__top-button button">Start page</RouterLink>
-            <div class="game__timer">00:00</div>
+            <div class="game__timer">{{ formatTime(elapsedSeconds) }}</div>
             <button @click="handleNewGame" class="game__top-button button">New game</button>
          </div>
       </Header>

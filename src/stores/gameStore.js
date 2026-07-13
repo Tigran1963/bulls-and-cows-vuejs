@@ -45,6 +45,11 @@ export const useGameStore = defineStore('game', () => {
       }
    };
 
+   const setLostGame = () => {
+      isGameOver.value = true;
+      isWon.value = false;
+   };
+
    return {
       secretCode,
       attempts,
@@ -52,5 +57,6 @@ export const useGameStore = defineStore('game', () => {
       isWon,
       startNewGame,
       addAttempt,
+      setLostGame,
    };
 });
