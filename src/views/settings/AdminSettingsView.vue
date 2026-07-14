@@ -4,18 +4,21 @@ import { useSettingsStore } from '@/stores/settingsStore';
 
 const settingsStore = useSettingsStore();
 
-const newId = ref('');
-const newName = ref('');
-const newMaxAttempts = ref(8);
-const newCodeLength = ref(4);
+const newDifficulty = ref({
+   id: '',
+   name: '',
+   maxAttempts: 8,
+   codeLength: 4,
+   range: '1-9',
+});
 
 const createDifficulty = () => {
-   if (!newName.value.trim()) {
+   if (!newDifficulty.value.name.trim()) {
       alert('Please enter a difficulty name');
       return;
    }
 
-   const id = newId.value.trim() || newName.value.toLowerCase().replace(/\s+/g, '-');
+   const id = newDifficulty.value.id.trim() || newDifficulty.value.name.toLowerCase().replace(/\s+/g, '-');
 
    const exists = settingsStore.difficulties.some((d) => d.id === id);
    if (exists) {
@@ -23,20 +26,23 @@ const createDifficulty = () => {
       return;
    }
 
-   const newDifficulty = {
+   const newDiff = {
       id: id,
-      name: newName.value,
-      maxAttempts: parseInt(newMaxAttempts.value),
-      codeLength: parseInt(newCodeLength.value),
+      name: newDifficulty.value.name,
+      maxAttempts: parseInt(newDifficulty.value.maxAttempts),
+      codeLength: parseInt(newDifficulty.value.codeLength),
+      range: newDifficulty.value.range,
    };
 
-   settingsStore.difficulties.push(newDifficulty);
-   localStorage.setItem('game_difficulties', JSON.stringify(settingsStore.difficulties));
+   settingsStore.difficulties.push(newDiff);
 
-   newId.value = '';
-   newName.value = '';
-   newMaxAttempts.value = 8;
-   newCodeLength.value = 4;
+   newDifficulty.value = {
+      id: '',
+      name: '',
+      maxAttempts: 8,
+      codeLength: 4,
+      range: '1-9',
+   };
 
    alert('New difficulty level added successfully!');
 };
@@ -48,7 +54,6 @@ const deleteDifficulty = (id) => {
    }
    if (confirm('Are you sure you want to delete this difficulty?')) {
       settingsStore.difficulties = settingsStore.difficulties.filter((d) => d.id !== id);
-      localStorage.setItem('game_difficulties', JSON.stringify(settingsStore.difficulties));
    }
 };
 </script>
@@ -87,6 +92,14 @@ const deleteDifficulty = (id) => {
                   />
                </label>
             </div>
+            <label class="admin-list__field">
+               <span>Numbers range:</span>
+               <input
+                  type="text"
+                  :value="diff.range"
+                  @input="settingsStore.updateDifficultyParams(diff.id, { range: $event.target.value })"
+               />
+            </label>
          </div>
       </div>
    </div>
@@ -96,21 +109,25 @@ const deleteDifficulty = (id) => {
       <form @submit.prevent="createDifficulty" class="admin-form">
          <div class="admin-form__field">
             <label>Display Name:</label>
-            <input type="text" v-model="newName" placeholder="ex. Super Easy" required />
+            <input type="text" v-model="newDifficulty.name" placeholder="ex. Super Easy" required />
          </div>
          <div class="admin-form__field">
             <label>Unique ID (Optional):</label>
-            <input type="text" v-model="newId" placeholder="ex. easy-peasy" />
+            <input type="text" v-model="newDifficulty.id" placeholder="ex. easy-peasy" />
          </div>
          <div class="admin-form__row">
             <div class="admin-form__field">
                <label>Max Attempts:</label>
-               <input type="number" min="1" max="12" v-model="newMaxAttempts" required />
+               <input type="number" min="1" max="12" v-model="newDifficulty.maxAttempts" required />
             </div>
             <div class="admin-form__field">
                <label>Code Length:</label>
-               <input type="number" min="1" max="5" v-model="newCodeLength" required />
+               <input type="number" min="1" max="5" v-model="newDifficulty.codeLength" required />
             </div>
+         </div>
+         <div class="admin-form__field">
+            <label>Numbers range:</label>
+            <input type="text" v-model="newDifficulty.range" placeholder="ex. 1-9 (max 0-F)" />
          </div>
          <button type="submit" class="button admin-form__submit">Add Level</button>
       </form>
@@ -180,6 +197,7 @@ const deleteDifficulty = (id) => {
    &__controls {
       display: flex;
       gap: toRem(16);
+      margin-bottom: toRem(16);
    }
 
    &__field {

@@ -1,13 +1,16 @@
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useGameStore } from '@/stores/gameStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import Header from '@/components/Header.vue';
 import Footer from '@/components/Footer.vue';
+import { expandRange } from '@/core/functions';
 
 const gameStore = useGameStore();
 const settingsStore = useSettingsStore();
 const currentGuess = ref(Array(settingsStore.currentDifficulty.codeLength).fill(''));
+
+// input
 const cellRefs = ref([]);
 const activeIndex = ref(null);
 
@@ -21,9 +24,8 @@ const focusInput = () => {
       cellRefs.value[targetIndex]?.focus();
    });
 };
-
 const handleCellInput = (event, index) => {
-   const val = event.target.value.replace(/[^0-9]/g, '');
+   const val = event.target.value.toUpperCase().replace(/[^0-9A-F]/g, '');
 
    if (val) {
       currentGuess.value[index] = val[0];
@@ -34,7 +36,6 @@ const handleCellInput = (event, index) => {
       currentGuess.value[index] = '';
    }
 };
-
 const handleCellKeyDown = (event, index) => {
    if (event.key === 'Backspace') {
       if (!currentGuess.value[index] && index > 0) {
@@ -46,13 +47,70 @@ const handleCellKeyDown = (event, index) => {
       handleTry();
    }
 };
+const handleKeyboardClick = (digit) => {
+   if (gameStore.isGameOver) return;
 
+   let targetIndex = activeIndex.value;
+	
+   if (targetIndex === null || targetIndex === undefined) {
+      const nextEmpty = currentGuess.value.findIndex((val) => val === '');
+      targetIndex = nextEmpty !== -1 ? nextEmpty : settingsStore.currentDifficulty.codeLength - 1;
+   }
+
+   if (!settingsStore.digitsRepeatable) {
+      const existingIndex = currentGuess.value.indexOf(digit);
+      if (existingIndex !== -1 && existingIndex !== targetIndex) {
+         alert('The digits in the code must not repeat');
+         return;
+      }
+   }
+
+   currentGuess.value[targetIndex] = digit;
+
+   if (targetIndex < settingsStore.currentDifficulty.codeLength - 1) {
+      const nextIdx = targetIndex + 1;
+      activeIndex.value = nextIdx;
+      cellRefs.value[nextIdx]?.focus();
+   } else {
+      cellRefs.value[targetIndex]?.focus();
+   }
+};
+
+// timer
+const timerTime = 600;
+const elapsedSeconds = ref(timerTime);
+const timerInterval = ref(null);
+
+const formatTime = (seconds) => {
+   const mins = Math.floor(seconds / 60);
+   const secs = seconds % 60;
+   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+};
+const startTimer = () => {
+   stopTimer();
+   elapsedSeconds.value = timerTime;
+   timerInterval.value = setInterval(() => {
+      elapsedSeconds.value--;
+   }, 1000);
+};
+const stopTimer = () => {
+   if (timerInterval.value) {
+      clearInterval(timerInterval.value);
+      timerInterval.value = null;
+   }
+};
+const resetTimer = () => {
+   stopTimer();
+   elapsedSeconds.value = timerTime;
+};
+
+// game logic
 const handleTry = () => {
    if (currentGuess.value.includes('')) {
       alert(`The code must consist of exactly ${settingsStore.currentDifficulty.codeLength} digits`);
       return;
    }
-	
+
    if (!settingsStore.digitsRepeatable) {
       const uniqueDigits = new Set(currentGuess.value);
       if (uniqueDigits.size !== settingsStore.currentDifficulty.codeLength) {
@@ -70,13 +128,25 @@ const handleNewGame = () => {
    gameStore.startNewGame();
    currentGuess.value = Array(settingsStore.currentDifficulty.codeLength).fill('');
    cellRefs.value = [];
+   resetTimer();
+   startTimer();
    focusInput();
 };
 
 watch(
+   () => elapsedSeconds.value,
+   (seconds) => {
+      if (seconds <= 0) {
+         stopTimer();
+         gameStore.setLostGame();
+      }
+   }
+);
+watch(
    () => gameStore.isGameOver,
    (isOver) => {
       if (isOver) {
+         stopTimer();
          setTimeout(() => {
             if (gameStore.isWon) {
                alert('Congratulations! You won!');
@@ -86,10 +156,14 @@ watch(
             handleNewGame();
          }, 100);
       }
-   },
+   }
 );
+
 onMounted(() => {
    handleNewGame();
+});
+onUnmounted(() => {
+   stopTimer();
 });
 </script>
 
@@ -98,7 +172,7 @@ onMounted(() => {
       <Header>
          <div class="game__top">
             <RouterLink :to="{ name: 'start' }" class="game__top-button button">Start page</RouterLink>
-            <div class="game__timer">00:00</div>
+            <div class="game__timer">{{ formatTime(elapsedSeconds) }}</div>
             <button @click="handleNewGame" class="game__top-button button">New game</button>
          </div>
       </Header>
@@ -151,7 +225,7 @@ onMounted(() => {
          </div>
       </div>
       <Footer>
-         <div class="code-input">
+         <div class="game__code-input code-input">
             <div class="code-input__cells">
                <input
                   v-for="y in settingsStore.currentDifficulty.codeLength"
@@ -159,8 +233,7 @@ onMounted(() => {
                   :ref="(el) => (cellRefs[y - 1] = el)"
                   type="text"
                   autocomplete="off"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
+                  pattern="[0-9A-Fa-f]*"
                   maxlength="1"
                   class="code-input__cell-input"
                   :class="{ 'code-input__cell-input--active': activeIndex === y - 1 }"
@@ -175,6 +248,22 @@ onMounted(() => {
             </div>
             <button class="button" type="button" @click="handleTry" :disabled="gameStore.isGameOver">Try</button>
          </div>
+         <div class="game__digits-keyboard digits-keyboard">
+            <button
+               v-for="digit in expandRange(settingsStore.currentDifficulty.range)"
+               :key="digit"
+               type="button"
+               class="digits-keyboard__button"
+               :style="{
+                  backgroundColor: settingsStore.digitsColors[digit],
+                  color: '#fff',
+               }"
+               :disabled="gameStore.isGameOver"
+               @mousedown.prevent="handleKeyboardClick(digit)"
+            >
+               {{ digit }}
+            </button>
+         </div>
       </Footer>
    </div>
 </template>
@@ -182,7 +271,7 @@ onMounted(() => {
 <style lang="scss" scoped>
 .game {
    padding-top: toRem(104);
-   padding-bottom: toRem(128);
+   padding-bottom: toRem(200);
 
    &__container {
       width: 100%;
@@ -288,6 +377,38 @@ onMounted(() => {
       &:disabled {
          background-color: #f5f5f5;
          cursor: default;
+      }
+   }
+}
+
+.digits-keyboard {
+   margin-top: toRem(12);
+   gap: toRem(6);
+   display: grid;
+   grid-template-columns: repeat(8, 1fr);
+   &__button {
+      width: toRem(32);
+      height: toRem(32);
+      border-radius: 50%;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: toRem(16);
+      font-weight: 600;
+      cursor: pointer;
+      transition:
+         transform 0.1s ease,
+         opacity 0.2s ease;
+
+      &:active {
+         transform: scale(0.9);
+      }
+
+      &:disabled {
+         opacity: 0.5;
+         cursor: default;
+         transform: none;
       }
    }
 }

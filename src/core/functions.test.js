@@ -10,19 +10,33 @@ describe('getRandomInt', () => {
       vi.restoreAllMocks();
    });
 
-   test('должен возвращать 0, если Math.random() равен 0', () => {
-      Math.random.mockReturnValue(0);
-      expect(getRandomInt(10)).toBe(0);
-   });
-
-   test('должен возвращать max 1 при максимальном значении Math.random()', () => {
-      Math.random.mockReturnValue(0.999999);
-      expect(getRandomInt(10)).toBe(9);
-   });
-
    test('использует дефолтное значение max = 10', () => {
       Math.random.mockReturnValue(0.5);
       expect(getRandomInt()).toBe(5);
+   });
+
+   test('должна возвращать целое число', () => {
+      const result = getRandomInt(1, 10);
+      expect(Number.isInteger(result)).toBe(true);
+   });
+
+   test('должна возвращать значение в диапазоне [min, max] включительно', () => {
+      for (let i = 0; i < 1000; i++) {
+         const val = getRandomInt(5, 15);
+         expect(val).toBeGreaterThanOrEqual(5);
+         expect(val).toBeLessThanOrEqual(15);
+      }
+   });
+
+   test('должна работать с дефолтными параметрами (0, 10)', () => {
+      const val = getRandomInt();
+      expect(val).toBeGreaterThanOrEqual(0);
+      expect(val).toBeLessThanOrEqual(10);
+   });
+
+   test('должна корректно работать, если min === max', () => {
+      const val = getRandomInt(7, 7);
+      expect(val).toBe(7);
    });
 });
 

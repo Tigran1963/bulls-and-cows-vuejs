@@ -15,3 +15,6 @@ npm run dev
 ```sh
 npm run build
 ```
+---
+
+### Play here [bulls-and-cows-vue.netlify.app](https://bulls-and-cows-vue.netlify.app/)

@@ -8,15 +8,16 @@ export const useGameStore = defineStore('game', () => {
 
    const codeLength = computed(() => settingsStore.currentDifficulty.codeLength);
    const maxAttempts = computed(() => settingsStore.currentDifficulty.maxAttempts);
-	const digitsRepeatable = computed(() => settingsStore.digitsRepeatable)
-	
+   const digitsRepeatable = computed(() => settingsStore.digitsRepeatable);
+   const range = computed(() => settingsStore.currentDifficulty.range);
+
    const secretCode = ref('');
    const attempts = ref([]);
    const isGameOver = ref(false);
    const isWon = ref(false);
 
    const startNewGame = () => {
-      secretCode.value = generateSecretCode(codeLength.value, digitsRepeatable.value);
+      secretCode.value = generateSecretCode(codeLength.value, range.value, digitsRepeatable.value);
       attempts.value = [];
       isGameOver.value = false;
       isWon.value = false;
@@ -44,12 +45,18 @@ export const useGameStore = defineStore('game', () => {
       }
    };
 
+   const setLostGame = () => {
+      isGameOver.value = true;
+      isWon.value = false;
+   };
+
    return {
-     	secretCode,
+      secretCode,
       attempts,
       isGameOver,
       isWon,
       startNewGame,
       addAttempt,
+      setLostGame,
    };
 });

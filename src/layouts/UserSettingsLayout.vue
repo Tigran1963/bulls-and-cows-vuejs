@@ -9,7 +9,7 @@ import Footer from '@/components/Footer.vue';
    </Header>
    <div class="settings">
       <div class="settings__container full-page-container">
-         <RouterView />
+         <slot></slot>
       </div>
    </div>
    <Footer>
