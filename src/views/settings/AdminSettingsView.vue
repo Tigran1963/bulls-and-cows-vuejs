@@ -35,7 +35,6 @@ const createDifficulty = () => {
    };
 
    settingsStore.difficulties.push(newDiff);
-   localStorage.setItem('game_difficulties', JSON.stringify(settingsStore.difficulties));
 
    newDifficulty.value = {
       id: '',
@@ -55,7 +54,6 @@ const deleteDifficulty = (id) => {
    }
    if (confirm('Are you sure you want to delete this difficulty?')) {
       settingsStore.difficulties = settingsStore.difficulties.filter((d) => d.id !== id);
-      localStorage.setItem('game_difficulties', JSON.stringify(settingsStore.difficulties));
    }
 };
 </script>
