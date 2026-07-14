@@ -4,6 +4,7 @@ import { useGameStore } from '@/stores/gameStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import Header from '@/components/Header.vue';
 import Footer from '@/components/Footer.vue';
+import { expandRange } from '@/core/functions';
 
 const gameStore = useGameStore();
 const settingsStore = useSettingsStore();
@@ -44,6 +45,34 @@ const handleCellKeyDown = (event, index) => {
       }
    } else if (event.key === 'Enter') {
       handleTry();
+   }
+};
+const handleKeyboardClick = (digit) => {
+   if (gameStore.isGameOver) return;
+
+   let targetIndex = activeIndex.value;
+	
+   if (targetIndex === null || targetIndex === undefined) {
+      const nextEmpty = currentGuess.value.findIndex((val) => val === '');
+      targetIndex = nextEmpty !== -1 ? nextEmpty : settingsStore.currentDifficulty.codeLength - 1;
+   }
+
+   if (!settingsStore.digitsRepeatable) {
+      const existingIndex = currentGuess.value.indexOf(digit);
+      if (existingIndex !== -1 && existingIndex !== targetIndex) {
+         alert('The digits in the code must not repeat');
+         return;
+      }
+   }
+
+   currentGuess.value[targetIndex] = digit;
+
+   if (targetIndex < settingsStore.currentDifficulty.codeLength - 1) {
+      const nextIdx = targetIndex + 1;
+      activeIndex.value = nextIdx;
+      cellRefs.value[nextIdx]?.focus();
+   } else {
+      cellRefs.value[targetIndex]?.focus();
    }
 };
 
@@ -196,7 +225,7 @@ onUnmounted(() => {
          </div>
       </div>
       <Footer>
-         <div class="code-input">
+         <div class="game__code-input code-input">
             <div class="code-input__cells">
                <input
                   v-for="y in settingsStore.currentDifficulty.codeLength"
@@ -219,6 +248,22 @@ onUnmounted(() => {
             </div>
             <button class="button" type="button" @click="handleTry" :disabled="gameStore.isGameOver">Try</button>
          </div>
+         <div class="game__digits-keyboard digits-keyboard">
+            <button
+               v-for="digit in expandRange(settingsStore.currentDifficulty.range)"
+               :key="digit"
+               type="button"
+               class="digits-keyboard__button"
+               :style="{
+                  backgroundColor: settingsStore.digitsColors[digit],
+                  color: '#fff',
+               }"
+               :disabled="gameStore.isGameOver"
+               @mousedown.prevent="handleKeyboardClick(digit)"
+            >
+               {{ digit }}
+            </button>
+         </div>
       </Footer>
    </div>
 </template>
@@ -226,7 +271,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .game {
    padding-top: toRem(104);
-   padding-bottom: toRem(128);
+   padding-bottom: toRem(200);
 
    &__container {
       width: 100%;
@@ -332,6 +377,38 @@ onUnmounted(() => {
       &:disabled {
          background-color: #f5f5f5;
          cursor: default;
+      }
+   }
+}
+
+.digits-keyboard {
+   margin-top: toRem(12);
+   gap: toRem(6);
+   display: grid;
+   grid-template-columns: repeat(8, 1fr);
+   &__button {
+      width: toRem(32);
+      height: toRem(32);
+      border-radius: 50%;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: toRem(16);
+      font-weight: 600;
+      cursor: pointer;
+      transition:
+         transform 0.1s ease,
+         opacity 0.2s ease;
+
+      &:active {
+         transform: scale(0.9);
+      }
+
+      &:disabled {
+         opacity: 0.5;
+         cursor: default;
+         transform: none;
       }
    }
 }

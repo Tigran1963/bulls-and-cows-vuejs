@@ -62,7 +62,7 @@ export function generateSecretCode(length, range, repeatable = true) {
    let code = '';
 
    for (let i = 0; i < length; i++) {
-      const randomIndex = getRandomInt(1, availableDigits.length - 1);
+      const randomIndex = getRandomInt(0, availableDigits.length - 1);
       code += availableDigits[randomIndex];
       if (!repeatable) {
          availableDigits.splice(randomIndex, 1);
